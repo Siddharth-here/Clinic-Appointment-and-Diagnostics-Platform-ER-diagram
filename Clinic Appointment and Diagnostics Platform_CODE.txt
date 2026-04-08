@@ -1,0 +1,87 @@
+patient [icon: user, color: yellow]{
+  id SERIEL pk
+  Name VARCHAR(30) not null
+  DOB DATE
+  Gender VARCHAR(10) not null
+  Phone CHAR(15)
+  Email VARCHAR(30) unique not null
+}
+
+doctor [icon: user-md, color: red] {
+  id SERIAL pk
+  Name VARCHAR(30) not null
+  Specialty_ID INT not null
+  LicenseNumber VARCHAR(20) unique not null
+  Phone CHAR(15)
+  Email VARCHAR(30) unique
+}
+
+specialty [icon: star, color: blue] {
+  id SERIAL pk
+  Name VARCHAR(50) not null
+  Description TEXT
+}
+
+appointment [icon: calendar, color: green] {
+  id SERIAL pk
+  Patient_ID INT not null
+  Doctor_ID INT not null
+  ApptDate DATE not null
+  ApptTime TIME not null
+  Status ENUM ('Scheduled', 'Cancelled', 'Completed') 
+}
+
+consultation [icon: clipboard, color: purple] {
+  id SERIAL pk
+  Appointment_ID INT unique not null
+  Symptoms TEXT
+  Diagnosis TEXT
+  TreatmentPlan TEXT
+  VisitDate TIMESTAMP default now()
+}
+
+diagnostic_test [icon: activity, color: orange] {
+  id SERIAL pk
+  TestName VARCHAR(50) not null
+  BaseCost DECIMAL(10,2)
+  Description VARCHAR(100)
+}
+
+test_report [icon: file-text, color: gray] {
+  id SERIAL pk
+  Consultation_ID INT not null
+  Test_ID INT not null
+  ResultsData TEXT
+  Status ENUM ('Pending', 'Finalized') 
+  ReportDate DATE
+}
+
+payment [icon: credit-card, color: blue] {
+  id SERIAL pk
+  Consultation_ID INT not null
+  Amount DECIMAL(10,2) not null
+  PaymentMethod Status ENUM ('Cash', 'Card', 'Insurance')  
+  PaymentDate TIMESTAMP default now()
+}
+
+// One specialty can have many doctors
+ specialty.id < doctor.Specialty_ID
+
+// One patient can book many appointments
+ patient.id < appointment.Patient_ID
+
+// One doctor can handle many appointments
+ doctor.id < appointment.Doctor_ID
+
+// An appointment leads to exactly one consultation (1:1)
+// This tracks which scheduled slot turned into a real visit
+ appointment.id - consultation.Appointment_ID
+
+// A consultation can result in multiple diagnostic tests
+ consultation.id < test_report.Consultation_ID
+
+// A test report must refer to a specific type of diagnostic test
+ diagnostic_test.id < test_report.Test_ID
+
+// A payment is generated for a specific consultation visit
+ consultation.id < payment.Consultation_ID
